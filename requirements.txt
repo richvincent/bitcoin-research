@@ -1,0 +1,7 @@
+blockchain==1.2.1
+btctxstore==4.6.1
+ecdsa==0.13
+future==0.15.2
+pycoin==0.62
+six==1.10.0
+wheel==0.24.0
