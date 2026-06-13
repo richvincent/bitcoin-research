@@ -9,26 +9,43 @@ into one minimal, privacy-first platform. It is **headless-first**: every
 capability is exposed as a clean REST API *and* as MCP tools so AI agents can
 operate the platform alongside humans.
 
-This repository currently contains the **Phase 1 MVP backend core**.
+This repository contains the **Phase 1 MVP**: backend core, MCP server, and a
+minimal Next.js client for the headline booking experience.
 
 ## What's in this build
 
 | Capability | Status | Module |
 |---|---|---|
-| Auth & roles (JWT) | ✅ | `app/api/routers/auth.py`, `app/core/security.py` |
-| Shops & barbers | ✅ | `app/api/routers/shops.py` |
-| Services catalog | ✅ | `app/api/routers/services.py` |
-| Scheduling & booking (online, walk-in, flex) | ✅ | `app/api/routers/bookings.py` |
-| Smart matching (style-fit score) | ✅ | `app/services/matching.py` |
-| Client CRM + style profiles | ✅ | `app/api/routers/clients.py` |
-| POS & payments (Stripe, stubbable) | ✅ | `app/api/routers/pos.py`, `app/services/payments.py` |
-| Inventory + Amazon product recs | ✅ | `app/api/routers/inventory.py`, `app/services/amazon.py` |
-| Bookkeeping sync (Frappe/Akaunting adapter) | ✅ (adapter stub) | `app/services/bookkeeping.py` |
+| Auth & roles (JWT) | ✅ | `backend/app/api/routers/auth.py`, `backend/app/core/security.py` |
+| Shops & barbers | ✅ | `backend/app/api/routers/shops.py` |
+| Services catalog | ✅ | `backend/app/api/routers/services.py` |
+| Scheduling & booking (online, walk-in, flex) | ✅ | `backend/app/api/routers/bookings.py` |
+| Smart matching (style-fit score) | ✅ | `backend/app/services/matching.py` |
+| Client CRM + style profiles | ✅ | `backend/app/api/routers/clients.py` |
+| POS & payments (Stripe, stubbable) | ✅ | `backend/app/api/routers/pos.py`, `backend/app/services/payments.py` |
+| Inventory + Amazon product recs | ✅ | `backend/app/api/routers/inventory.py`, `backend/app/services/amazon.py` |
+| Bookkeeping sync (Frappe/Akaunting adapter) | ✅ (adapter stub) | `backend/app/services/bookkeeping.py` |
 | MCP server (agent tools) | ✅ | `mcp_server/server.py` |
+| Web client — login, profile, Flex Cut, bookings | ✅ | `frontend/` (Next.js) |
 
-Not yet built (later phases): Next.js PWA frontend, marketplace transactions,
-Ruby concierge live-voice integration, OpenClaw/A2A orchestration, one-click
-self-host installer.
+Not yet built (later phases): barber/owner dashboard + POS UI, marketplace
+transactions, Ruby concierge live-voice integration, OpenClaw/A2A
+orchestration, PWA/offline, one-click self-host installer.
+
+## Frontend
+
+A minimal, elegant Next.js (App Router) client lives in [`frontend/`](frontend/)
+and covers the client journey: login → style profile → **Flex Cut Now**
+(smart matching + one-tap booking) → bookings. See
+[`frontend/README.md`](frontend/README.md).
+
+```bash
+cd floyde/frontend
+cp .env.local.example .env.local
+npm install && npm run dev      # http://localhost:3000
+```
+
+> Run the backend (seeded) first; log in with **client@floyde.app / password123**.
 
 ## Quick start (local, SQLite)
 
