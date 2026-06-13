@@ -13,6 +13,7 @@ from app.database import engine, init_db
 from app.models import (
     Barber,
     ClientProfile,
+    ConciergeRequest,
     Offering,
     Product,
     Provider,
@@ -165,6 +166,17 @@ def seed() -> None:
         s.commit()
         for p in providers:
             marketplace.recompute_rating(s, p)
+
+        # ── A demo concierge request waiting at the desk ──
+        s.add(
+            ConciergeRequest(
+                client_id=client.id,
+                shop_id=shop.id,
+                phone="+13135550100",
+                topic="Help me pick a style for a wedding",
+            )
+        )
+        s.commit()
 
         print("Seeded demo data:")
         print(f"  Shop: {shop.name} (#{shop.id})")

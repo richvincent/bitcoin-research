@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { clsx } from "@/lib/clsx";
 import { ThemeToggle } from "./ThemeToggle";
+import { ConciergeLauncher } from "./ConciergeLauncher";
 
 const LINKS = [
   { href: "/flex", label: "Flex Cut" },
@@ -41,6 +42,7 @@ export function Nav() {
           </nav>
         </div>
         <div className="flex items-center gap-3">
+          <ConciergeLauncher />
           <ThemeToggle />
           {user && (
             <button

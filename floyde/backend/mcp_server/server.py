@@ -19,7 +19,7 @@ from mcp.server.fastmcp import FastMCP
 from sqlmodel import Session, select
 
 from app.database import engine, init_db
-from app.models import ClientProfile, Service, User, UserRole
+from app.models import ClientProfile, ConciergeRequest, Service, User, UserRole
 from app.services import amazon, concierge, matching, scheduling
 
 mcp = FastMCP("floyde")
@@ -158,9 +158,17 @@ def initiate_concierge_call(client_email: str, phone: str, topic: str) -> dict:
     """Queue a premium live-voice concierge (Ruby) callback for a client."""
     with Session(engine) as session:
         user = _resolve_client(session, client_email)
-        return concierge.initiate_call(
-            client_user_id=user.id, phone=phone, topic=topic
-        )
+        req = ConciergeRequest(client_id=user.id, phone=phone, topic=topic)
+        session.add(req)
+        session.commit()
+        session.refresh(req)
+        concierge.notify_desk(req)
+        return {
+            "ok": True,
+            "request_id": req.request_id,
+            "status": req.status,
+            "topic": req.topic,
+        }
 
 
 def main() -> None:

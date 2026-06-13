@@ -8,6 +8,8 @@ import type {
   Booking,
   ClientProfile,
   ClientProfileUpsert,
+  ConciergeRequest,
+  ConciergeStatus,
   ManagedBooking,
   Offering,
   Payment,
@@ -282,6 +284,22 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+
+  // ── concierge (Ruby) ──
+  requestConcierge: (body: { phone: string; topic: string; shop_id?: number | null }) =>
+    request<ConciergeRequest>("/concierge/call", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  conciergeRequests: (shopId?: number) =>
+    request<ConciergeRequest[]>(
+      `/concierge/requests${shopId ? `?shop_id=${shopId}` : ""}`,
+    ),
+  updateConciergeStatus: (id: number, status: ConciergeStatus) =>
+    request<ConciergeRequest>(
+      `/concierge/requests/${id}/status?new_status=${status}`,
+      { method: "POST" },
+    ),
 };
 
 export { BASE as API_BASE };

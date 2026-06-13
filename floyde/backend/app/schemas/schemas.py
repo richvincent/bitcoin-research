@@ -13,6 +13,7 @@ from pydantic import BaseModel, EmailStr, Field
 from app.models.enums import (
     BookingSource,
     BookingStatus,
+    ConciergeStatus,
     PaymentStatus,
     PaymentType,
     ProviderCategory,
@@ -292,3 +293,24 @@ class ReviewOut(BaseModel):
 class ProviderDetail(ProviderOut):
     offerings: list[OfferingOut] = []
     reviews: list[ReviewOut] = []
+
+
+# ── Concierge (Ruby) ──────────────────────────────────────────────────
+class ConciergeCallRequest(BaseModel):
+    phone: str
+    topic: str = "booking assistance"
+    shop_id: int | None = None
+
+
+class ConciergeRequestOut(BaseModel):
+    id: int
+    request_id: str
+    client_id: int
+    shop_id: int | None
+    phone: str
+    topic: str
+    status: ConciergeStatus
+    notes: str
+    created_at: datetime
+    client_name: str = ""
+    model_config = {"from_attributes": True}

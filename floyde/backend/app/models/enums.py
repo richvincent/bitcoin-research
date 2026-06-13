@@ -48,3 +48,10 @@ class ProviderCategory(StrEnum):
     FINANCE = "finance"
     SOFTWARE = "software"
     OTHER = "other"
+
+
+class ConciergeStatus(StrEnum):
+    QUEUED = "queued"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"

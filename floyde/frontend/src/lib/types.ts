@@ -199,3 +199,22 @@ export interface ProviderDetail extends Provider {
   offerings: Offering[];
   reviews: Review[];
 }
+
+export type ConciergeStatus =
+  | "queued"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
+
+export interface ConciergeRequest {
+  id: number;
+  request_id: string;
+  client_id: number;
+  shop_id: number | null;
+  phone: string;
+  topic: string;
+  status: ConciergeStatus;
+  notes: string;
+  created_at: string;
+  client_name: string;
+}

@@ -10,9 +10,12 @@ from datetime import UTC, datetime
 from sqlalchemy import JSON, Column
 from sqlmodel import Field, Relationship, SQLModel
 
+import uuid
+
 from app.models.enums import (
     BookingSource,
     BookingStatus,
+    ConciergeStatus,
     PaymentStatus,
     PaymentType,
     ProviderCategory,
@@ -230,3 +233,23 @@ class Review(SQLModel, table=True):
     created_at: datetime = Field(default_factory=_utcnow)
 
     provider: Provider = Relationship(back_populates="reviews")
+
+
+def _concierge_ref() -> str:
+    return f"ccg_{uuid.uuid4().hex[:16]}"
+
+
+class ConciergeRequest(SQLModel, table=True):
+    """A premium live-voice (Ruby) callback request from a client."""
+
+    __tablename__ = "concierge_requests"
+
+    id: int | None = Field(default=None, primary_key=True)
+    request_id: str = Field(default_factory=_concierge_ref, index=True, unique=True)
+    client_id: int = Field(foreign_key="users.id", index=True)
+    shop_id: int | None = Field(default=None, foreign_key="shops.id", index=True)
+    phone: str = ""
+    topic: str = ""
+    status: ConciergeStatus = Field(default=ConciergeStatus.QUEUED, index=True)
+    notes: str = ""
+    created_at: datetime = Field(default_factory=_utcnow)

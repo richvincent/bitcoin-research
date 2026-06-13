@@ -6,6 +6,7 @@ Importing this package registers every table on ``SQLModel.metadata``.
 from app.models.enums import (
     BookingSource,
     BookingStatus,
+    ConciergeStatus,
     PaymentStatus,
     PaymentType,
     ProviderCategory,
@@ -15,6 +16,7 @@ from app.models.tables import (
     Barber,
     Booking,
     ClientProfile,
+    ConciergeRequest,
     Offering,
     Payment,
     Product,
@@ -28,6 +30,7 @@ from app.models.tables import (
 __all__ = [
     "BookingSource",
     "BookingStatus",
+    "ConciergeStatus",
     "PaymentStatus",
     "PaymentType",
     "ProviderCategory",
@@ -35,6 +38,7 @@ __all__ = [
     "Barber",
     "Booking",
     "ClientProfile",
+    "ConciergeRequest",
     "Offering",
     "Payment",
     "Product",
