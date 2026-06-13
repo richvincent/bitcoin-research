@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     amazon_partner_tag: str = "floyde-20"
     amazon_region: str = "us-east-1"
 
+    # Marketplace platform commission (fraction of order subtotal).
+    marketplace_commission_rate: float = 0.10
+
     # Bookkeeping sync
     bookkeeping_provider: Literal["none", "frappe", "akaunting"] = "none"
     bookkeeping_base_url: str | None = None

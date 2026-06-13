@@ -200,6 +200,39 @@ export interface ProviderDetail extends Provider {
   reviews: Review[];
 }
 
+export type OrderStatus =
+  | "pending"
+  | "paid"
+  | "fulfilled"
+  | "cancelled"
+  | "refunded";
+
+export interface OrderItem {
+  id: number;
+  offering_id: number;
+  title: string;
+  unit_price_cents: number;
+  quantity: number;
+  line_total_cents: number;
+}
+
+export interface Order {
+  id: number;
+  provider_id: number;
+  provider_name: string;
+  buyer_id: number;
+  buyer_name: string;
+  status: OrderStatus;
+  subtotal_cents: number;
+  commission_rate: number;
+  commission_cents: number;
+  provider_payout_cents: number;
+  currency: string;
+  notes: string;
+  created_at: string;
+  items: OrderItem[];
+}
+
 export type ConciergeStatus =
   | "queued"
   | "in_progress"

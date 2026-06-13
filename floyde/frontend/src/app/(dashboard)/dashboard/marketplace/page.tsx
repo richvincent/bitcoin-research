@@ -39,9 +39,14 @@ export default function MarketplacePage() {
             Vetted suppliers, insurance, marketing, and more for your shop.
           </p>
         </div>
-        <Button onClick={() => setShowForm((s) => !s)}>
-          {showForm ? "Close" : "List your business"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link href="/dashboard/marketplace/orders">
+            <Button variant="ghost">Orders</Button>
+          </Link>
+          <Button onClick={() => setShowForm((s) => !s)}>
+            {showForm ? "Close" : "List your business"}
+          </Button>
+        </div>
       </div>
 
       {showForm && (

@@ -14,7 +14,10 @@ from sqlmodel import select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models import (
+    MarketplaceOrder,
     Offering,
+    OrderItem,
+    OrderStatus,
     Provider,
     ProviderCategory,
     Review,
@@ -23,6 +26,9 @@ from app.models import (
 from app.schemas.schemas import (
     OfferingCreate,
     OfferingOut,
+    OrderCreate,
+    OrderItemOut,
+    OrderOut,
     ProviderCreate,
     ProviderDetail,
     ProviderOut,
@@ -175,3 +181,109 @@ def _owned_provider(session: SessionDep, provider_id: int, user: User) -> Provid
     if provider.created_by != user.id and user.role != "admin":
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Not your listing")
     return provider
+
+
+# ── Orders / transactions ─────────────────────────────────────────────
+def _order_out(session: SessionDep, order: MarketplaceOrder) -> OrderOut:
+    provider = session.get(Provider, order.provider_id)
+    buyer = session.get(User, order.buyer_id)
+    items = session.exec(
+        select(OrderItem).where(OrderItem.order_id == order.id)
+    ).all()
+    return OrderOut(
+        **order.model_dump(),
+        provider_name=provider.name if provider else "",
+        buyer_name=(buyer.full_name or buyer.email) if buyer else "",
+        items=[OrderItemOut.model_validate(i) for i in items],
+    )
+
+
+@router.post("/orders", response_model=OrderOut, status_code=status.HTTP_201_CREATED)
+def create_order(
+    body: OrderCreate, user: CurrentUser, session: SessionDep
+) -> OrderOut:
+    try:
+        order = marketplace.place_order(
+            session,
+            provider_id=body.provider_id,
+            buyer_id=user.id,
+            lines=[(i.offering_id, i.quantity) for i in body.items],
+            buyer_shop_id=body.buyer_shop_id,
+            notes=body.notes,
+        )
+    except marketplace.OrderError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+    return _order_out(session, order)
+
+
+@router.get("/orders", response_model=list[OrderOut])
+def list_orders(
+    user: CurrentUser, session: SessionDep, role: str = "buyer"
+) -> list[OrderOut]:
+    """`role=buyer` (default) returns the user's purchases; `role=seller`
+    returns orders placed against providers they own."""
+    if role == "seller":
+        owned = session.exec(
+            select(Provider.id).where(Provider.created_by == user.id)
+        ).all()
+        if not owned:
+            return []
+        stmt = select(MarketplaceOrder).where(
+            MarketplaceOrder.provider_id.in_(owned)  # type: ignore[attr-defined]
+        )
+    else:
+        stmt = select(MarketplaceOrder).where(MarketplaceOrder.buyer_id == user.id)
+    orders = session.exec(stmt.order_by(MarketplaceOrder.created_at.desc())).all()
+    return [_order_out(session, o) for o in orders]
+
+
+def _accessible_order(
+    session: SessionDep, order_id: int, user: User
+) -> MarketplaceOrder:
+    order = session.get(MarketplaceOrder, order_id)
+    if order is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Order not found")
+    provider = session.get(Provider, order.provider_id)
+    is_seller = provider is not None and provider.created_by == user.id
+    if order.buyer_id != user.id and not is_seller and user.role != "admin":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not your order")
+    return order
+
+
+@router.get("/orders/{order_id}", response_model=OrderOut)
+def get_order(order_id: int, user: CurrentUser, session: SessionDep) -> OrderOut:
+    return _order_out(session, _accessible_order(session, order_id, user))
+
+
+@router.post("/orders/{order_id}/fulfill", response_model=OrderOut)
+def fulfill_order(order_id: int, user: CurrentUser, session: SessionDep) -> OrderOut:
+    """Seller marks a paid order fulfilled."""
+    order = session.get(MarketplaceOrder, order_id)
+    if order is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Order not found")
+    _owned_provider(session, order.provider_id, user)  # seller-only
+    if order.status != OrderStatus.PAID:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            f"Only paid orders can be fulfilled (status: {order.status})",
+        )
+    order.status = OrderStatus.FULFILLED
+    session.add(order)
+    session.commit()
+    session.refresh(order)
+    return _order_out(session, order)
+
+
+@router.post("/orders/{order_id}/cancel", response_model=OrderOut)
+def cancel_order(order_id: int, user: CurrentUser, session: SessionDep) -> OrderOut:
+    """Buyer or seller cancels an order that hasn't been fulfilled."""
+    order = _accessible_order(session, order_id, user)
+    if order.status == OrderStatus.FULFILLED:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "Fulfilled orders can't be cancelled"
+        )
+    order.status = OrderStatus.CANCELLED
+    session.add(order)
+    session.commit()
+    session.refresh(order)
+    return _order_out(session, order)

@@ -31,11 +31,12 @@ minimal Next.js client for the headline booking experience.
 | Staff booking APIs — enriched schedule, walk-in, complete | ✅ | `backend/app/api/routers/bookings.py` |
 | Marketplace lite — provider directory, offerings, ratings/reviews | ✅ | `backend/app/api/routers/marketplace.py`, `frontend/.../marketplace/` |
 | Concierge (Ruby) — client request launcher + staff desk inbox | ✅ | `backend/app/api/routers/concierge.py`, `frontend/.../ConciergeLauncher.tsx`, `.../dashboard/concierge/` |
+| Marketplace transactions — orders, commission split, fulfillment | ✅ | `backend/app/services/marketplace.py`, `frontend/.../marketplace/orders/` |
 
-Not yet built (later phases): marketplace **transactions/commissions**, Ruby
-**live-voice integration** (real telephony — requests are persisted + queued
-today), OpenClaw/A2A orchestration, PWA/offline, commission & payout
-reporting, one-click self-host installer.
+Not yet built (later phases): Ruby **live-voice integration** (real telephony —
+requests are persisted + queued today), subscription tiers/billing, OpenClaw/A2A
+orchestration, PWA/offline, deeper finance reporting, one-click self-host
+installer.
 
 ## Frontend
 

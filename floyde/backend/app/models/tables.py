@@ -16,6 +16,7 @@ from app.models.enums import (
     BookingSource,
     BookingStatus,
     ConciergeStatus,
+    OrderStatus,
     PaymentStatus,
     PaymentType,
     ProviderCategory,
@@ -217,6 +218,46 @@ class Offering(SQLModel, table=True):
     created_at: datetime = Field(default_factory=_utcnow)
 
     provider: Provider = Relationship(back_populates="offerings")
+
+
+class MarketplaceOrder(SQLModel, table=True):
+    """A purchase from a provider. Money split: the buyer pays the subtotal,
+    the platform keeps a commission, and the provider is owed the remainder."""
+
+    __tablename__ = "marketplace_orders"
+
+    id: int | None = Field(default=None, primary_key=True)
+    provider_id: int = Field(foreign_key="providers.id", index=True)
+    buyer_id: int = Field(foreign_key="users.id", index=True)
+    buyer_shop_id: int | None = Field(default=None, foreign_key="shops.id")
+    status: OrderStatus = Field(default=OrderStatus.PENDING, index=True)
+    subtotal_cents: int = 0
+    commission_rate: float = 0.0
+    commission_cents: int = 0
+    provider_payout_cents: int = 0
+    currency: str = "usd"
+    stripe_payment_intent_id: str | None = None
+    notes: str = ""
+    created_at: datetime = Field(default_factory=_utcnow)
+
+    items: list["OrderItem"] = Relationship(back_populates="order")
+
+
+class OrderItem(SQLModel, table=True):
+    """A line on an order. Title/price are snapshotted so history is stable
+    even if the offering later changes."""
+
+    __tablename__ = "order_items"
+
+    id: int | None = Field(default=None, primary_key=True)
+    order_id: int = Field(foreign_key="marketplace_orders.id", index=True)
+    offering_id: int = Field(foreign_key="offerings.id")
+    title: str = ""
+    unit_price_cents: int = 0
+    quantity: int = 1
+    line_total_cents: int = 0
+
+    order: MarketplaceOrder = Relationship(back_populates="items")
 
 
 class Review(SQLModel, table=True):

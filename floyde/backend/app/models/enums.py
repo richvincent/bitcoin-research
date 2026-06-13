@@ -55,3 +55,11 @@ class ConciergeStatus(StrEnum):
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
+
+
+class OrderStatus(StrEnum):
+    PENDING = "pending"        # created, payment not yet captured
+    PAID = "paid"             # payment captured, awaiting fulfillment
+    FULFILLED = "fulfilled"    # provider shipped/delivered
+    CANCELLED = "cancelled"
+    REFUNDED = "refunded"

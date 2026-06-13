@@ -14,6 +14,7 @@ from app.models.enums import (
     BookingSource,
     BookingStatus,
     ConciergeStatus,
+    OrderStatus,
     PaymentStatus,
     PaymentType,
     ProviderCategory,
@@ -293,6 +294,47 @@ class ReviewOut(BaseModel):
 class ProviderDetail(ProviderOut):
     offerings: list[OfferingOut] = []
     reviews: list[ReviewOut] = []
+
+
+# ── Marketplace orders ────────────────────────────────────────────────
+class OrderLineCreate(BaseModel):
+    offering_id: int
+    quantity: int = Field(default=1, ge=1)
+
+
+class OrderCreate(BaseModel):
+    provider_id: int
+    items: list[OrderLineCreate] = Field(min_length=1)
+    buyer_shop_id: int | None = None
+    notes: str = ""
+
+
+class OrderItemOut(BaseModel):
+    id: int
+    offering_id: int
+    title: str
+    unit_price_cents: int
+    quantity: int
+    line_total_cents: int
+    model_config = {"from_attributes": True}
+
+
+class OrderOut(BaseModel):
+    id: int
+    provider_id: int
+    provider_name: str = ""
+    buyer_id: int
+    buyer_name: str = ""
+    status: OrderStatus
+    subtotal_cents: int
+    commission_rate: float
+    commission_cents: int
+    provider_payout_cents: int
+    currency: str
+    notes: str
+    created_at: datetime
+    items: list[OrderItemOut] = []
+    model_config = {"from_attributes": True}
 
 
 # ── Concierge (Ruby) ──────────────────────────────────────────────────

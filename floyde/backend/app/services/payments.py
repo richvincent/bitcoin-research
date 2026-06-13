@@ -30,6 +30,22 @@ def _create_stripe_intent(amount_cents: int, currency: str) -> tuple[str, str]:
     return intent.id, intent.client_secret
 
 
+def create_intent(amount_cents: int, currency: str = "usd") -> tuple[str, str | None, bool]:
+    """Create a payment intent (real or stub).
+
+    Returns (intent_id, client_secret, succeeded). In stub mode the charge is
+    considered immediately succeeded; with real Stripe it starts pending and
+    is confirmed later via the webhook. Shared by POS and marketplace.
+    """
+    if amount_cents <= 0:
+        raise ValueError("amount_cents must be positive")
+    if settings.stripe_enabled:
+        intent_id, client_secret = _create_stripe_intent(amount_cents, currency)
+        return intent_id, client_secret, False
+    intent_id = f"pi_stub_{uuid.uuid4().hex[:24]}"
+    return intent_id, f"{intent_id}_secret_stub", True
+
+
 def create_payment(
     session: Session,
     *,
@@ -44,17 +60,8 @@ def create_payment(
     In stub mode the payment is marked SUCCEEDED immediately so downstream
     flows (confirmation, bookkeeping) can be tested end to end.
     """
-    if amount_cents <= 0:
-        raise ValueError("amount_cents must be positive")
-
-    client_secret: str | None = None
-    if settings.stripe_enabled:
-        intent_id, client_secret = _create_stripe_intent(amount_cents, currency)
-        status = PaymentStatus.PENDING
-    else:
-        intent_id = f"pi_stub_{uuid.uuid4().hex[:24]}"
-        client_secret = f"{intent_id}_secret_stub"
-        status = PaymentStatus.SUCCEEDED
+    intent_id, client_secret, succeeded = create_intent(amount_cents, currency)
+    status = PaymentStatus.SUCCEEDED if succeeded else PaymentStatus.PENDING
 
     payment = Payment(
         booking_id=booking_id,

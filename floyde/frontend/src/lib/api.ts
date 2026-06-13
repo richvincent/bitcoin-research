@@ -12,6 +12,7 @@ import type {
   ConciergeStatus,
   ManagedBooking,
   Offering,
+  Order,
   Payment,
   Product,
   Provider,
@@ -284,6 +285,24 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+
+  // marketplace orders / transactions
+  createOrder: (body: {
+    provider_id: number;
+    items: { offering_id: number; quantity: number }[];
+    buyer_shop_id?: number | null;
+    notes?: string;
+  }) =>
+    request<Order>("/marketplace/orders", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  orders: (role: "buyer" | "seller" = "buyer") =>
+    request<Order[]>(`/marketplace/orders?role=${role}`),
+  fulfillOrder: (id: number) =>
+    request<Order>(`/marketplace/orders/${id}/fulfill`, { method: "POST" }),
+  cancelOrder: (id: number) =>
+    request<Order>(`/marketplace/orders/${id}/cancel`, { method: "POST" }),
 
   // ── concierge (Ruby) ──
   requestConcierge: (body: { phone: string; topic: string; shop_id?: number | null }) =>

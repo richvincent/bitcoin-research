@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useShop } from "@/lib/shop";
 import type { ProviderDetail } from "@/lib/types";
 import { dollars } from "@/lib/format";
 import { Badge, Button, Card, Input, Label } from "@/components/ui";
@@ -14,9 +15,14 @@ export default function ProviderPage() {
   const params = useParams<{ id: string }>();
   const providerId = Number(params.id);
   const { user } = useAuth();
+  const { shopId } = useShop();
 
   const [provider, setProvider] = useState<ProviderDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [cart, setCart] = useState<Record<number, number>>({});
+  const [placedOrderId, setPlacedOrderId] = useState<number | null>(null);
+  const [orderError, setOrderError] = useState<string | null>(null);
+  const [placing, setPlacing] = useState(false);
 
   const load = useCallback(() => {
     setError(null);
@@ -32,6 +38,48 @@ export default function ProviderPage() {
   if (!provider) return <p className="text-sm text-zinc-400">Loading…</p>;
 
   const isOwner = !!user && provider.created_by === user.id;
+
+  function setQty(id: number, qty: number) {
+    setPlacedOrderId(null);
+    setCart((c) => {
+      const next = { ...c };
+      if (qty <= 0) delete next[id];
+      else next[id] = qty;
+      return next;
+    });
+  }
+
+  const cartLines = Object.entries(cart)
+    .map(([id, qty]) => ({
+      offering: provider!.offerings.find((o) => o.id === Number(id)),
+      qty,
+    }))
+    .filter((l) => l.offering);
+  const cartTotal = cartLines.reduce(
+    (sum, l) => sum + (l.offering!.price_cents ?? 0) * l.qty,
+    0,
+  );
+
+  async function placeOrder() {
+    setPlacing(true);
+    setOrderError(null);
+    try {
+      const order = await api.createOrder({
+        provider_id: providerId,
+        items: cartLines.map((l) => ({
+          offering_id: l.offering!.id,
+          quantity: l.qty,
+        })),
+        buyer_shop_id: shopId,
+      });
+      setCart({});
+      setPlacedOrderId(order.id);
+    } catch (e) {
+      setOrderError(e instanceof ApiError ? e.message : "Checkout failed");
+    } finally {
+      setPlacing(false);
+    }
+  }
 
   return (
     <div className="max-w-3xl space-y-8">
@@ -92,21 +140,74 @@ export default function ProviderPage() {
           {provider.offerings.map((o) => (
             <Card key={o.id}>
               <div className="flex items-center justify-between gap-4">
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium">{o.title}</p>
                   {o.description && (
                     <p className="text-sm text-zinc-500">{o.description}</p>
                   )}
                 </div>
-                <span className="whitespace-nowrap text-sm font-medium tabular-nums">
-                  {o.price_cents != null
-                    ? `${dollars(o.price_cents)}${o.unit ? ` ${o.unit}` : ""}`
-                    : "Contact for pricing"}
-                </span>
+                <div className="flex shrink-0 items-center gap-3">
+                  <span className="whitespace-nowrap text-sm font-medium tabular-nums">
+                    {o.price_cents != null
+                      ? `${dollars(o.price_cents)}${o.unit ? ` ${o.unit}` : ""}`
+                      : "Contact for pricing"}
+                  </span>
+                  {!isOwner && o.price_cents != null && (
+                    <QtyControl
+                      qty={cart[o.id] ?? 0}
+                      onChange={(q) => setQty(o.id, q)}
+                    />
+                  )}
+                </div>
               </div>
             </Card>
           ))}
         </div>
+
+        {cartLines.length > 0 && (
+          <Card className="mt-3 border-zinc-300 dark:border-zinc-700">
+            <p className="mb-2 text-sm font-medium">Your order</p>
+            <ul className="mb-3 space-y-1 text-sm">
+              {cartLines.map((l) => (
+                <li key={l.offering!.id} className="flex justify-between">
+                  <span className="text-zinc-600 dark:text-zinc-300">
+                    {l.offering!.title} × {l.qty}
+                  </span>
+                  <span className="tabular-nums">
+                    {dollars((l.offering!.price_cents ?? 0) * l.qty)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <div className="flex items-center justify-between border-t border-zinc-100 pt-2 text-sm font-medium dark:border-zinc-900">
+              <span>Total</span>
+              <span className="tabular-nums">{dollars(cartTotal)}</span>
+            </div>
+            {orderError && <p className="mt-2 text-sm text-red-600">{orderError}</p>}
+            <Button
+              className="mt-3 w-full"
+              onClick={placeOrder}
+              disabled={placing}
+            >
+              {placing ? "Placing order…" : `Place order · ${dollars(cartTotal)}`}
+            </Button>
+          </Card>
+        )}
+
+        {placedOrderId && (
+          <Card className="mt-3 border-green-200 bg-green-50/60 dark:border-green-900/50 dark:bg-green-950/20">
+            <p className="text-sm text-green-800 dark:text-green-300">
+              Order #{placedOrderId} placed and paid.{" "}
+              <Link
+                href="/dashboard/marketplace/orders"
+                className="font-medium underline-offset-2 hover:underline"
+              >
+                View your orders →
+              </Link>
+            </p>
+          </Card>
+        )}
+
         {isOwner && <AddOffering providerId={providerId} onDone={load} />}
       </section>
 
@@ -137,6 +238,41 @@ export default function ProviderPage() {
           ))}
         </div>
       </section>
+    </div>
+  );
+}
+
+function QtyControl({
+  qty,
+  onChange,
+}: {
+  qty: number;
+  onChange: (q: number) => void;
+}) {
+  if (qty === 0) {
+    return (
+      <Button variant="ghost" onClick={() => onChange(1)}>
+        Add
+      </Button>
+    );
+  }
+  return (
+    <div className="flex items-center gap-1">
+      <button
+        onClick={() => onChange(qty - 1)}
+        className="h-7 w-7 rounded-md border border-zinc-200 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+        aria-label="Decrease"
+      >
+        −
+      </button>
+      <span className="w-6 text-center text-sm tabular-nums">{qty}</span>
+      <button
+        onClick={() => onChange(qty + 1)}
+        className="h-7 w-7 rounded-md border border-zinc-200 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+        aria-label="Increase"
+      >
+        +
+      </button>
     </div>
   );
 }

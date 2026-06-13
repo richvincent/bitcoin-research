@@ -178,6 +178,41 @@ def seed() -> None:
         )
         s.commit()
 
+        # ── A second shop owner who buys supplies on the marketplace ──
+        buyer = User(
+            email="buyer@floyde.app",
+            hashed_password=hash_password("password123"),
+            full_name="Goober Pyle",
+            role=UserRole.OWNER,
+        )
+        s.add(buyer)
+        s.commit()
+        s.refresh(buyer)
+        shop2 = Shop(
+            name="Northside Fades", slug="northside-fades", owner_id=buyer.id,
+            address="900 Woodward Ave, Detroit, MI",
+            latitude=42.3580, longitude=-83.0700,
+        )
+        s.add(shop2)
+        s.commit()
+        s.refresh(shop2)
+
+        capes = s.exec(
+            select(Offering).where(
+                Offering.provider_id == providers[0].id,
+                Offering.title.like("%capes%"),  # type: ignore[attr-defined]
+            )
+        ).first()
+        if capes is not None:
+            marketplace.place_order(
+                s,
+                provider_id=providers[0].id,
+                buyer_id=buyer.id,
+                lines=[(capes.id, 2)],
+                buyer_shop_id=shop2.id,
+                notes="Restocking for the new chair.",
+            )
+
         print("Seeded demo data:")
         print(f"  Shop: {shop.name} (#{shop.id})")
         print("  Login (all): password123")
