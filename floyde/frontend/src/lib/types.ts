@@ -92,3 +92,58 @@ export interface Booking {
   match_score: number | null;
   notes: string;
 }
+
+export interface ManagedBooking {
+  id: number;
+  start_time: string;
+  end_time: string;
+  status: BookingStatus;
+  source: string;
+  deposit_cents: number;
+  price_cents: number;
+  match_score: number | null;
+  notes: string;
+  client_name: string;
+  client_email: string;
+  barber_id: number;
+  barber_name: string;
+  service_name: string;
+}
+
+export type PaymentType = "deposit" | "final" | "product";
+export type PaymentStatus = "pending" | "succeeded" | "failed" | "refunded";
+
+export interface Payment {
+  id: number;
+  booking_id: number | null;
+  shop_id: number;
+  amount_cents: number;
+  currency: string;
+  type: PaymentType;
+  status: PaymentStatus;
+  stripe_payment_intent_id: string | null;
+}
+
+export interface Product {
+  id: number;
+  shop_id: number;
+  name: string;
+  brand: string;
+  sku: string;
+  quantity: number;
+  reorder_threshold: number;
+  cost_cents: number;
+  price_cents: number;
+  amazon_asin: string | null;
+}
+
+export interface AmazonRec {
+  asin: string;
+  title: string;
+  brand: string;
+  price: string;
+  rating: number | null;
+  review_count: number | null;
+  url: string;
+  image_url: string;
+}

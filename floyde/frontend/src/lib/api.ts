@@ -2,11 +2,15 @@
 // Reads the JWT from localStorage so it works from any client component.
 
 import type {
+  AmazonRec,
   Barber,
   BarberMatch,
   Booking,
   ClientProfile,
   ClientProfileUpsert,
+  ManagedBooking,
+  Payment,
+  Product,
   Service,
   Shop,
   User,
@@ -143,6 +147,92 @@ export const api = {
   myBookings: () => request<Booking[]>("/bookings"),
   cancelBooking: (id: number) =>
     request<Booking>(`/bookings/${id}/cancel`, { method: "POST" }),
+
+  // ── staff / dashboard ──
+  manageSchedule: (shopId?: number) =>
+    request<ManagedBooking[]>(
+      `/bookings/manage${shopId ? `?shop_id=${shopId}` : ""}`,
+    ),
+  staffBooking: (body: {
+    client_email: string;
+    barber_id: number;
+    service_id: number;
+    start_time: string;
+    source?: string;
+    notes?: string;
+  }) =>
+    request<Booking>("/bookings/staff", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  confirmBooking: (id: number) =>
+    request<Booking>(`/bookings/${id}/confirm`, { method: "POST" }),
+  completeBooking: (id: number) =>
+    request<Booking>(`/bookings/${id}/complete`, { method: "POST" }),
+
+  // POS
+  charge: (body: {
+    shop_id: number;
+    amount_cents: number;
+    booking_id?: number | null;
+    type?: string;
+    currency?: string;
+  }) =>
+    request<{ payment: Payment; client_secret: string | null }>("/pos/charge", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  payments: (shopId?: number) =>
+    request<Payment[]>(`/pos/payments${shopId ? `?shop_id=${shopId}` : ""}`),
+
+  // inventory
+  products: (shopId: number) =>
+    request<Product[]>(`/inventory/products?shop_id=${shopId}`),
+  addProduct: (body: {
+    shop_id: number;
+    name: string;
+    brand?: string;
+    quantity?: number;
+    reorder_threshold?: number;
+    cost_cents?: number;
+    price_cents?: number;
+  }) =>
+    request<Product>("/inventory/products", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  reorderSuggestions: (shopId: number) =>
+    request<AmazonRec[]>(`/inventory/reorder-suggestions?shop_id=${shopId}`),
+  productRecs: (q: string, limit = 5) =>
+    request<AmazonRec[]>(
+      `/inventory/recommendations?q=${encodeURIComponent(q)}&limit=${limit}`,
+    ),
+
+  // setup / management
+  createShop: (body: { name: string; slug: string; address?: string }) =>
+    request<Shop>("/shops", { method: "POST", body: JSON.stringify(body) }),
+  addBarber: (body: {
+    user_id: number;
+    shop_id: number;
+    display_name: string;
+    bio?: string;
+    specialties?: string[];
+  }) =>
+    request<Barber>("/shops/barbers", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  createService: (body: {
+    shop_id: number;
+    name: string;
+    duration_minutes: number;
+    price_cents: number;
+    tags?: string[];
+  }) =>
+    request<Service>("/services", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
 };
 
 export { BASE as API_BASE };

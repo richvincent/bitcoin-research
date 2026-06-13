@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { ApiError } from "@/lib/api";
+import { homePathForRole } from "@/lib/roles";
 import { Button, Input, Label } from "@/components/ui";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -19,7 +20,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!loading && user) router.replace("/flex");
+    if (!loading && user) router.replace(homePathForRole(user.role));
   }, [user, loading, router]);
 
   async function onSubmit(e: React.FormEvent) {
@@ -29,7 +30,7 @@ export default function LoginPage() {
     try {
       if (mode === "login") await login(email, password);
       else await signup(email, password, fullName, "client");
-      router.replace("/flex");
+      // redirect handled by the effect once `user` is set
     } catch (err) {
       setError(
         err instanceof ApiError ? err.message : "Something went wrong. Try again.",

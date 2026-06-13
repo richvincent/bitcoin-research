@@ -27,10 +27,12 @@ minimal Next.js client for the headline booking experience.
 | Bookkeeping sync (Frappe/Akaunting adapter) | ✅ (adapter stub) | `backend/app/services/bookkeeping.py` |
 | MCP server (agent tools) | ✅ | `mcp_server/server.py` |
 | Web client — login, profile, Flex Cut, bookings | ✅ | `frontend/` (Next.js) |
+| Shop dashboard — overview, schedule, walk-ins, POS, inventory, setup | ✅ | `frontend/src/app/(dashboard)/` |
+| Staff booking APIs — enriched schedule, walk-in, complete | ✅ | `backend/app/api/routers/bookings.py` |
 
-Not yet built (later phases): barber/owner dashboard + POS UI, marketplace
-transactions, Ruby concierge live-voice integration, OpenClaw/A2A
-orchestration, PWA/offline, one-click self-host installer.
+Not yet built (later phases): marketplace transactions, Ruby concierge
+live-voice integration, OpenClaw/A2A orchestration, PWA/offline, commission
+& payout reporting, one-click self-host installer.
 
 ## Frontend
 

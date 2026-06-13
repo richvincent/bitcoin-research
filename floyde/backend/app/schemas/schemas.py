@@ -148,6 +148,36 @@ class BookingOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class StaffBookingCreate(BaseModel):
+    """A barber/owner booking on behalf of a client (e.g. a walk-in)."""
+
+    client_email: EmailStr
+    barber_id: int
+    service_id: int
+    start_time: datetime
+    source: BookingSource = BookingSource.WALK_IN
+    notes: str = ""
+
+
+class ManagedBooking(BaseModel):
+    """Enriched booking row for the staff schedule (names resolved)."""
+
+    id: int
+    start_time: datetime
+    end_time: datetime
+    status: BookingStatus
+    source: BookingSource
+    deposit_cents: int
+    price_cents: int
+    match_score: float | None
+    notes: str
+    client_name: str
+    client_email: str
+    barber_id: int
+    barber_name: str
+    service_name: str
+
+
 # ── Payments / POS ────────────────────────────────────────────────────
 class PaymentCreate(BaseModel):
     booking_id: int | None = None
