@@ -1,0 +1,42 @@
+# Floyde — self-host stack (Phase 1).
+# Brings up Postgres + the API. Redis is included for the queues/caching that
+# marketing automation and matching will use in Phase 2.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: floyde
+      POSTGRES_PASSWORD: floyde
+      POSTGRES_DB: floyde
+    volumes:
+      - floyde_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U floyde"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  api:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      FLOYDE_ENV: development
+      FLOYDE_DATABASE_URL: postgresql+psycopg://floyde:floyde@db:5432/floyde
+      FLOYDE_SECRET_KEY: ${FLOYDE_SECRET_KEY:-dev-insecure-change-me-0123456789abcdef}
+      FLOYDE_STRIPE_SECRET_KEY: ${FLOYDE_STRIPE_SECRET_KEY:-}
+      FLOYDE_BOOKKEEPING_PROVIDER: ${FLOYDE_BOOKKEEPING_PROVIDER:-none}
+    ports:
+      - "8000:8000"
+
+volumes:
+  floyde_pgdata:
