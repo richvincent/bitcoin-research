@@ -50,6 +50,13 @@ class Settings(BaseSettings):
     # Concierge (Ruby)
     concierge_webhook_url: str | None = None
 
+    # Telephony (Twilio) — powers the concierge "call now" bridge.
+    twilio_account_sid: str | None = None
+    twilio_auth_token: str | None = None
+    twilio_from_number: str | None = None
+    # The human concierge desk number a client gets bridged to.
+    concierge_desk_number: str | None = None
+
     @property
     def stripe_enabled(self) -> bool:
         return bool(self.stripe_secret_key)
@@ -57,6 +64,14 @@ class Settings(BaseSettings):
     @property
     def amazon_enabled(self) -> bool:
         return bool(self.amazon_access_key and self.amazon_secret_key)
+
+    @property
+    def twilio_enabled(self) -> bool:
+        return bool(
+            self.twilio_account_sid
+            and self.twilio_auth_token
+            and self.twilio_from_number
+        )
 
 
 @lru_cache

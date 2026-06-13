@@ -6,9 +6,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import select
 
 from app.api.deps import CurrentUser, SessionDep, require_roles
+from app.config import settings
 from app.models import ConciergeRequest, ConciergeStatus, User, UserRole
 from app.schemas.schemas import ConciergeCallRequest, ConciergeRequestOut
-from app.services import concierge
+from app.services import concierge, telephony
 
 router = APIRouter(prefix="/concierge", tags=["concierge"])
 
@@ -54,6 +55,36 @@ def list_requests(
         stmt = stmt.where(ConciergeRequest.shop_id == shop_id)
     rows = session.exec(stmt.order_by(ConciergeRequest.created_at.desc())).all()
     return [_to_out(session, r) for r in rows]
+
+
+@router.post("/requests/{request_id}/call", response_model=ConciergeRequestOut)
+def place_call(
+    request_id: int,
+    session: SessionDep,
+    _: User = Depends(require_roles(*_STAFF)),
+) -> ConciergeRequestOut:
+    """Dial the client and bridge them to the concierge desk (Twilio).
+
+    Works in stub mode (simulated SID) when Twilio isn't configured, so the
+    desk workflow is fully exercisable without credentials."""
+    req = session.get(ConciergeRequest, request_id)
+    if req is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Request not found")
+    if not req.phone:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Request has no phone number")
+
+    result = telephony.place_call(req.phone, settings.concierge_desk_number)
+    if result["status"] == "failed":
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, "Could not place the call; try again"
+        )
+
+    req.call_sid = result["sid"]
+    req.status = ConciergeStatus.IN_PROGRESS
+    session.add(req)
+    session.commit()
+    session.refresh(req)
+    return _to_out(session, req)
 
 
 @router.post("/requests/{request_id}/status", response_model=ConciergeRequestOut)

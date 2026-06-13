@@ -320,6 +320,10 @@ export const api = {
       `/concierge/requests/${id}/status?new_status=${status}`,
       { method: "POST" },
     ),
+  callConcierge: (id: number) =>
+    request<ConciergeRequest>(`/concierge/requests/${id}/call`, {
+      method: "POST",
+    }),
 
   // ── reports ──
   report: (shopId: number, days = 30) =>

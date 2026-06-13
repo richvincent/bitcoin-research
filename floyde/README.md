@@ -33,9 +33,9 @@ minimal Next.js client for the headline booking experience.
 | Concierge (Ruby) — client request launcher + staff desk inbox | ✅ | `backend/app/api/routers/concierge.py`, `frontend/.../ConciergeLauncher.tsx`, `.../dashboard/concierge/` |
 | Marketplace transactions — orders, commission split, fulfillment | ✅ | `backend/app/services/marketplace.py`, `frontend/.../marketplace/orders/` |
 | Reports & analytics — revenue, bookings, barber leaderboard, supply spend | ✅ | `backend/app/services/reports.py`, `frontend/.../dashboard/reports/` |
+| Telephony — concierge "call now" bridge (Twilio, stub-first) | ✅ | `backend/app/services/telephony.py` |
 
-Not yet built (later phases): Ruby **live-voice integration** (real telephony —
-requests are persisted + queued today), subscription tiers/billing, OpenClaw/A2A
+Not yet built (later phases): subscription tiers/billing, OpenClaw/A2A
 orchestration, PWA/offline, one-click self-host installer.
 
 ## Frontend

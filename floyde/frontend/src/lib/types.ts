@@ -277,6 +277,7 @@ export interface ConciergeRequest {
   topic: string;
   status: ConciergeStatus;
   notes: string;
+  call_sid: string | null;
   created_at: string;
   client_name: string;
 }

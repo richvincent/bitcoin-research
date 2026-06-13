@@ -39,6 +39,15 @@ export default function ConciergePage() {
     }
   }
 
+  async function call(id: number) {
+    try {
+      await api.callConcierge(id);
+      load();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Could not place the call");
+    }
+  }
+
   const open = requests.filter(
     (r) => r.status === "queued" || r.status === "in_progress",
   );
@@ -85,15 +94,20 @@ export default function ConciergePage() {
                   <p className="mt-0.5 text-xs text-zinc-400">
                     {r.phone} · {formatDateTime(r.created_at)} · {r.request_id}
                   </p>
+                  {r.call_sid && (
+                    <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                      ☎ Call placed · {r.call_sid}
+                    </p>
+                  )}
                 </div>
                 {active && (
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap justify-end gap-2">
                     {r.status === "queued" && (
-                      <Button
-                        variant="ghost"
-                        onClick={() => setStatus(r.id, "in_progress")}
-                      >
-                        Start
+                      <Button onClick={() => call(r.id)}>Call now</Button>
+                    )}
+                    {r.status === "in_progress" && (
+                      <Button variant="ghost" onClick={() => call(r.id)}>
+                        Redial
                       </Button>
                     )}
                     <Button variant="ghost" onClick={() => setStatus(r.id, "completed")}>

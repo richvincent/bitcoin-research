@@ -58,6 +58,36 @@ def test_staff_sees_queue_and_updates_status(client):
     assert done.json()["status"] == "completed"
 
 
+def test_staff_places_call_stub(client):
+    cust = auth_headers(client, "caller@floyde.app", "password123", "client")
+    rid = client.post(
+        "/concierge/call",
+        json={"phone": "+13135550100", "topic": "help"},
+        headers=cust,
+    ).json()["id"]
+
+    staff = auth_headers(client, "owner@floyde.app", "password123", "owner")
+    resp = client.post(f"/concierge/requests/{rid}/call", headers=staff)
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    # stub mode returns a simulated SID and advances the request
+    assert body["status"] == "in_progress"
+    assert body["call_sid"].startswith("CA_stub_")
+
+
+def test_call_requires_staff(client):
+    cust = auth_headers(client, "caller2@floyde.app", "password123", "client")
+    rid = client.post(
+        "/concierge/call", json={"phone": "1", "topic": "t"}, headers=cust
+    ).json()["id"]
+    assert client.post(f"/concierge/requests/{rid}/call", headers=cust).status_code == 403
+
+
+def test_call_unknown_request_404(client):
+    staff = auth_headers(client, "owner2@floyde.app", "password123", "owner")
+    assert client.post("/concierge/requests/9999/call", headers=staff).status_code == 404
+
+
 def test_status_update_requires_staff(client):
     cust = auth_headers(client, "cust2@floyde.app", "password123", "client")
     rid = client.post(

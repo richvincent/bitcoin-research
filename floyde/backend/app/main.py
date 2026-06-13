@@ -64,5 +64,6 @@ def health() -> dict:
             "stripe": "live" if settings.stripe_enabled else "stub",
             "amazon": "live" if settings.amazon_enabled else "catalog",
             "bookkeeping": settings.bookkeeping_provider,
+            "telephony": "live" if settings.twilio_enabled else "stub",
         },
     }

@@ -293,4 +293,6 @@ class ConciergeRequest(SQLModel, table=True):
     topic: str = ""
     status: ConciergeStatus = Field(default=ConciergeStatus.QUEUED, index=True)
     notes: str = ""
+    # Telephony: set once a "call now" bridge is placed.
+    call_sid: str | None = None
     created_at: datetime = Field(default_factory=_utcnow)

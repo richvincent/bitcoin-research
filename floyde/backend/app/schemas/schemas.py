@@ -383,6 +383,7 @@ class ConciergeRequestOut(BaseModel):
     topic: str
     status: ConciergeStatus
     notes: str
+    call_sid: str | None = None
     created_at: datetime
     client_name: str = ""
     model_config = {"from_attributes": True}
