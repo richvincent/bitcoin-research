@@ -21,6 +21,7 @@ import type {
   Review,
   Service,
   Shop,
+  ShopReport,
   User,
 } from "./types";
 
@@ -319,6 +320,10 @@ export const api = {
       `/concierge/requests/${id}/status?new_status=${status}`,
       { method: "POST" },
     ),
+
+  // ── reports ──
+  report: (shopId: number, days = 30) =>
+    request<ShopReport>(`/reports/summary?shop_id=${shopId}&days=${days}`),
 };
 
 export { BASE as API_BASE };

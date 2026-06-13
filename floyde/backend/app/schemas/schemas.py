@@ -337,6 +337,36 @@ class OrderOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# ── Reports / analytics ───────────────────────────────────────────────
+class RevenuePoint(BaseModel):
+    date: str
+    cents: int
+
+
+class BarberLeader(BaseModel):
+    barber_id: int
+    name: str
+    completed: int
+
+
+class ShopReport(BaseModel):
+    shop_id: int
+    range_days: int
+    revenue_cents: int
+    payments_count: int
+    revenue_by_type: dict[str, int]
+    revenue_by_day: list[RevenuePoint]
+    bookings_total: int
+    bookings_completed: int
+    bookings_cancelled: int
+    bookings_no_show: int
+    bookings_upcoming: int
+    no_show_rate: float
+    barber_leaderboard: list[BarberLeader]
+    supply_spend_cents: int
+    net_cents: int
+
+
 # ── Concierge (Ruby) ──────────────────────────────────────────────────
 class ConciergeCallRequest(BaseModel):
     phone: str

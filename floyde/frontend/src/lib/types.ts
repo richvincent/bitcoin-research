@@ -233,6 +233,35 @@ export interface Order {
   items: OrderItem[];
 }
 
+export interface RevenuePoint {
+  date: string;
+  cents: number;
+}
+
+export interface BarberLeader {
+  barber_id: number;
+  name: string;
+  completed: number;
+}
+
+export interface ShopReport {
+  shop_id: number;
+  range_days: number;
+  revenue_cents: number;
+  payments_count: number;
+  revenue_by_type: Record<string, number>;
+  revenue_by_day: RevenuePoint[];
+  bookings_total: number;
+  bookings_completed: number;
+  bookings_cancelled: number;
+  bookings_no_show: number;
+  bookings_upcoming: number;
+  no_show_rate: number;
+  barber_leaderboard: BarberLeader[];
+  supply_spend_cents: number;
+  net_cents: number;
+}
+
 export type ConciergeStatus =
   | "queued"
   | "in_progress"
