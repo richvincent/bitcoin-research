@@ -15,6 +15,7 @@ from app.models.enums import (
     BookingStatus,
     PaymentStatus,
     PaymentType,
+    ProviderCategory,
     UserRole,
 )
 
@@ -226,3 +227,68 @@ class AmazonRec(BaseModel):
     review_count: int | None = None
     url: str = ""
     image_url: str = ""
+
+
+# ── Marketplace ───────────────────────────────────────────────────────
+class OfferingCreate(BaseModel):
+    title: str
+    description: str = ""
+    price_cents: int | None = None
+    unit: str = ""
+
+
+class OfferingOut(OfferingCreate):
+    id: int
+    provider_id: int
+    is_active: bool = True
+    model_config = {"from_attributes": True}
+
+
+class ProviderCreate(BaseModel):
+    name: str
+    category: ProviderCategory = ProviderCategory.OTHER
+    description: str = ""
+    website: str = ""
+    logo_url: str = ""
+    contact_email: str = ""
+    location: str = ""
+
+
+class ProviderOut(BaseModel):
+    id: int
+    name: str
+    slug: str
+    category: ProviderCategory
+    description: str
+    website: str
+    logo_url: str
+    contact_email: str
+    location: str
+    rating: float
+    review_count: int
+    is_active: bool
+    created_by: int | None = None
+    model_config = {"from_attributes": True}
+
+
+class ReviewCreate(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    title: str = ""
+    body: str = ""
+
+
+class ReviewOut(BaseModel):
+    id: int
+    provider_id: int
+    author_id: int
+    author_name: str = ""
+    rating: int
+    title: str
+    body: str
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+class ProviderDetail(ProviderOut):
+    offerings: list[OfferingOut] = []
+    reviews: list[ReviewOut] = []

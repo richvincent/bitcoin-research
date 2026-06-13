@@ -37,3 +37,14 @@ class PaymentStatus(StrEnum):
     SUCCEEDED = "succeeded"
     FAILED = "failed"
     REFUNDED = "refunded"
+
+
+class ProviderCategory(StrEnum):
+    SUPPLIES = "supplies"
+    EQUIPMENT = "equipment"
+    INSURANCE = "insurance"
+    MARKETING = "marketing"
+    EDUCATION = "education"
+    FINANCE = "finance"
+    SOFTWARE = "software"
+    OTHER = "other"

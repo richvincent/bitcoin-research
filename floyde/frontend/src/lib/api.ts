@@ -9,8 +9,13 @@ import type {
   ClientProfile,
   ClientProfileUpsert,
   ManagedBooking,
+  Offering,
   Payment,
   Product,
+  Provider,
+  ProviderCategory,
+  ProviderDetail,
+  Review,
   Service,
   Shop,
   User,
@@ -230,6 +235,50 @@ export const api = {
     tags?: string[];
   }) =>
     request<Service>("/services", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  // ── marketplace ──
+  marketplaceCategories: () =>
+    request<string[]>("/marketplace/categories", { auth: false }),
+  providers: (params: { category?: string; q?: string; sort?: string } = {}) => {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v) qs.set(k, String(v));
+    });
+    const s = qs.toString();
+    return request<Provider[]>(`/marketplace/providers${s ? `?${s}` : ""}`, {
+      auth: false,
+    });
+  },
+  provider: (id: number) =>
+    request<ProviderDetail>(`/marketplace/providers/${id}`, { auth: false }),
+  createProvider: (body: {
+    name: string;
+    category: ProviderCategory;
+    description?: string;
+    website?: string;
+    contact_email?: string;
+    location?: string;
+  }) =>
+    request<Provider>("/marketplace/providers", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  addOffering: (
+    providerId: number,
+    body: { title: string; description?: string; price_cents?: number | null; unit?: string },
+  ) =>
+    request<Offering>(`/marketplace/providers/${providerId}/offerings`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  addReview: (
+    providerId: number,
+    body: { rating: number; title?: string; body?: string },
+  ) =>
+    request<Review>(`/marketplace/providers/${providerId}/reviews`, {
       method: "POST",
       body: JSON.stringify(body),
     }),

@@ -13,12 +13,17 @@ from app.database import engine, init_db
 from app.models import (
     Barber,
     ClientProfile,
+    Offering,
     Product,
+    Provider,
+    ProviderCategory,
+    Review,
     Service,
     Shop,
     User,
     UserRole,
 )
+from app.services import marketplace
 
 DEMO_SLUG = "mayberry-cuts"
 
@@ -111,6 +116,55 @@ def seed() -> None:
         )
         s.add_all([*barbers, *services, *products, profile])
         s.commit()
+
+        # ── Marketplace providers (listed by the shop owner) ──
+        providers = [
+            Provider(
+                name="Detroit Barber Supply Co.", slug="detroit-barber-supply",
+                category=ProviderCategory.SUPPLIES, created_by=owner.id,
+                location="Detroit, MI",
+                description="Wholesale clippers, blades, capes, and consumables.",
+                website="https://example.com/dbs",
+                contact_email="sales@dbs.example",
+            ),
+            Provider(
+                name="ShearShield Insurance", slug="shearshield-insurance",
+                category=ProviderCategory.INSURANCE, created_by=owner.id,
+                location="Remote",
+                description="Liability + booth-rental coverage built for barbers.",
+                website="https://example.com/shearshield",
+            ),
+            Provider(
+                name="ChairFull Marketing", slug="chairfull-marketing",
+                category=ProviderCategory.MARKETING, created_by=owner.id,
+                description="Local SEO and rebooking campaigns for shops.",
+            ),
+        ]
+        s.add_all(providers)
+        s.commit()
+        for p in providers:
+            s.refresh(p)
+
+        s.add_all([
+            Offering(provider_id=providers[0].id, title="Wahl Magic Clip (case of 6)",
+                     price_cents=54000, unit="per case"),
+            Offering(provider_id=providers[0].id, title="Disposable capes (500)",
+                     price_cents=8900, unit="per box"),
+            Offering(provider_id=providers[1].id, title="Pro liability plan",
+                     price_cents=3900, unit="per month"),
+            Offering(provider_id=providers[2].id, title="Rebooking automation",
+                     price_cents=14900, unit="per month"),
+        ])
+        # A couple of reviews from the seeded client.
+        s.add_all([
+            Review(provider_id=providers[0].id, author_id=client.id, rating=5,
+                   title="Fast shipping", body="Next-day on blades. Great prices."),
+            Review(provider_id=providers[1].id, author_id=client.id, rating=4,
+                   title="Solid coverage", body="Easy signup, fair rates."),
+        ])
+        s.commit()
+        for p in providers:
+            marketplace.recompute_rating(s, p)
 
         print("Seeded demo data:")
         print(f"  Shop: {shop.name} (#{shop.id})")

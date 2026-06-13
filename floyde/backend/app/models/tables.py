@@ -15,6 +15,7 @@ from app.models.enums import (
     BookingStatus,
     PaymentStatus,
     PaymentType,
+    ProviderCategory,
     UserRole,
 )
 
@@ -170,3 +171,62 @@ class Product(SQLModel, table=True):
     created_at: datetime = Field(default_factory=_utcnow)
 
     shop: Shop = Relationship(back_populates="products")
+
+
+# ── Marketplace (Phase 2 "lite": directory + ratings, no transactions yet) ──
+class Provider(SQLModel, table=True):
+    """A marketplace vendor — supplies, insurance, marketing, etc."""
+
+    __tablename__ = "providers"
+
+    id: int | None = Field(default=None, primary_key=True)
+    name: str
+    slug: str = Field(index=True, unique=True)
+    category: ProviderCategory = Field(default=ProviderCategory.OTHER, index=True)
+    description: str = ""
+    website: str = ""
+    logo_url: str = ""
+    contact_email: str = ""
+    location: str = ""
+    created_by: int | None = Field(default=None, foreign_key="users.id")
+    is_active: bool = True
+    # Cached aggregates, recomputed on each new review.
+    rating: float = 0.0
+    review_count: int = 0
+    created_at: datetime = Field(default_factory=_utcnow)
+
+    offerings: list["Offering"] = Relationship(back_populates="provider")
+    reviews: list["Review"] = Relationship(back_populates="provider")
+
+
+class Offering(SQLModel, table=True):
+    """A listing under a provider (a product, plan, or service)."""
+
+    __tablename__ = "offerings"
+
+    id: int | None = Field(default=None, primary_key=True)
+    provider_id: int = Field(foreign_key="providers.id", index=True)
+    title: str
+    description: str = ""
+    price_cents: int | None = None  # None = "contact for pricing"
+    unit: str = ""  # e.g. "per month", "each", "per case"
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=_utcnow)
+
+    provider: Provider = Relationship(back_populates="offerings")
+
+
+class Review(SQLModel, table=True):
+    """A 1–5 star rating + note for a provider. One per author per provider."""
+
+    __tablename__ = "reviews"
+
+    id: int | None = Field(default=None, primary_key=True)
+    provider_id: int = Field(foreign_key="providers.id", index=True)
+    author_id: int = Field(foreign_key="users.id", index=True)
+    rating: int  # 1..5
+    title: str = ""
+    body: str = ""
+    created_at: datetime = Field(default_factory=_utcnow)
+
+    provider: Provider = Relationship(back_populates="reviews")

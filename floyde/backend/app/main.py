@@ -14,6 +14,7 @@ from app.api.routers import (
     clients,
     concierge,
     inventory,
+    marketplace,
     matching,
     pos,
     services,
@@ -45,7 +46,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-for r in (auth, shops, services, clients, matching, bookings, pos, inventory, concierge):
+for r in (
+    auth, shops, services, clients, matching, bookings, pos, inventory,
+    concierge, marketplace,
+):
     app.include_router(r.router)
 
 

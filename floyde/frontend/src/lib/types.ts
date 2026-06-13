@@ -147,3 +147,55 @@ export interface AmazonRec {
   url: string;
   image_url: string;
 }
+
+export type ProviderCategory =
+  | "supplies"
+  | "equipment"
+  | "insurance"
+  | "marketing"
+  | "education"
+  | "finance"
+  | "software"
+  | "other";
+
+export interface Provider {
+  id: number;
+  name: string;
+  slug: string;
+  category: ProviderCategory;
+  description: string;
+  website: string;
+  logo_url: string;
+  contact_email: string;
+  location: string;
+  rating: number;
+  review_count: number;
+  is_active: boolean;
+  created_by: number | null;
+}
+
+export interface Offering {
+  id: number;
+  provider_id: number;
+  title: string;
+  description: string;
+  price_cents: number | null;
+  unit: string;
+  is_active: boolean;
+}
+
+export interface Review {
+  id: number;
+  provider_id: number;
+  author_id: number;
+  author_name: string;
+  rating: number;
+  title: string;
+  body: string;
+  created_at: string;
+}
+
+export interface ProviderDetail extends Provider {
+  offerings: Offering[];
+  reviews: Review[];
+}
