@@ -35,6 +35,10 @@ minimal Next.js client for the headline booking experience.
 | Reports & analytics — revenue, bookings, barber leaderboard, supply spend | ✅ | `backend/app/services/reports.py`, `frontend/.../dashboard/reports/` |
 | Telephony — concierge "call now" bridge (Twilio, stub-first) | ✅ | `backend/app/services/telephony.py` |
 
+> **Going live with telephony/SMS?** See [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md)
+> for the Twilio Trust Hub / CNAM / SHAKEN-STIR / TCPA checklist (voice) and the
+> A2P 10DLC Brand + Campaign checklist (future SMS).
+
 Not yet built (later phases): subscription tiers/billing, OpenClaw/A2A
 orchestration, PWA/offline, one-click self-host installer.
 
